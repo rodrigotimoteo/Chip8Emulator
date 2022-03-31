@@ -5,12 +5,11 @@ public class Chip8Emu extends Thread{
     private Keyboard keyboard;
 
     public Chip8Emu() {
-        Keyboard keyboard = new Keyboard();
-        Memory memory = new Memory(keyboard);
-        DisplayFrame displayFrame = new DisplayFrame(memory);
-        memory.dumpMemory();
-        memory.loadProgram("pong2.rom");
-        memory.dumpMemory();
+        keyboard = new Keyboard();
+        memory = new Memory(keyboard);
+        displayFrame = new DisplayFrame(memory);
+        memory.loadProgram("logo.ch8");
+        memory.loadFontSet();
     }
 
     public void run() { //Chip 8 runs at 60FPS
@@ -31,5 +30,6 @@ public class Chip8Emu extends Thread{
 
     public static void main(String[] args) {
         Chip8Emu chip8Emu = new Chip8Emu();
+        chip8Emu.start();
     }
 }

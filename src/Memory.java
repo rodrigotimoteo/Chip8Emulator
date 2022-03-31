@@ -24,7 +24,7 @@ public class Memory {
     private Keyboard keyboard; //Get the keyboard input
 
     public boolean[][] Graphics = new boolean[WIDTH][HEIGHT];
-    private DisplayFrame displayFrame;
+    //private DisplayFrame displayFrame;
     private boolean drawFlag;
 
     private void clearMemory() {
@@ -45,7 +45,7 @@ public class Memory {
     } //Clears the I register
 
     private void clearRegisterPC() {
-        registerPC = 0;
+        registerPC = 0x200;
     } //Clears the program counter
 
     private void clearRegisterSP() {
@@ -72,9 +72,13 @@ public class Memory {
         return Graphics;
     } //Get the graphics information
 
-    /*public void setDisplay(DisplayFrame displayFrame) {
-        this.displayFrame = displayFrame;
-    }*/
+    public void clearScreen() {
+        for(int x = 0; x < WIDTH; x++) {
+            for(int y = 0; y < HEIGHT; y++) {
+                Graphics[x][y] = false;
+            }
+        }
+    }
 
     public int getWidth() {
         return WIDTH;
@@ -101,12 +105,18 @@ public class Memory {
         }
     }
 
+    public void dumpGraphics() {
+        System.out.format("\n\n");
+        for (int x = 0; x < WIDTH; x++) {
+            for (int y = 0; y < HEIGHT; y++) {
+                System.out.print(Graphics[x][y] + " ");
+            }
+            System.out.format("\n");
+        }
+        System.out.format("\n\n");
+    }
     public Memory(Keyboard keyboard) {
         this.keyboard = keyboard;
-        Graphics[1][10] = true;
-        Graphics[2][20] = true;
-        Graphics[50][2] = true;
-        OperationCode = 0x6A00;
 
         clearMemory();
         clearRegistersVAndStack();
@@ -123,12 +133,15 @@ public class Memory {
     }
 
     private void decodeOPCode() { //OPCode is divided into 4 bytes - FFFF
+        //System.out.print(Integer.toHexString(OperationCode) + ": ");
         switch(OperationCode & 0xF000) { //Check the first bit using bitwise and
             case 0x0000: //If the first byte is 0 then
                 if(OperationCode == 0x00E0) { //If the OPCode is 00E0, clear the display
-                    //displayPanel.clearScreen();
+                    clearScreen();
+                    drawFlag = true;
                     registerPC += 2;
                 } else if(OperationCode == 0x00EE) { //If the OPCode is 00EE return to the subroutine
+
                     return;
                 } else { //If not salls machine code routine at the address 0FFF
                     return;
@@ -139,12 +152,12 @@ public class Memory {
                 break;
 
             case 0x2000: //If the first byte is 2 then
-                stack[++stackPointer] = registerPC; //Add to the stack pointer and gives it the value of the program counter register
+                stack[stackPointer++] = registerPC; //Add to the stack pointer and gives it the value of the program counter register
                 registerPC = (char)(OperationCode & 0x0FFF); //Assigns the value of the last 3 bytes of the OPCode to the program counter (Basically calling a sub routine)
                 break;
 
             case 0x3000: //If the first byte is 3 then skips the next instruction if VX equals NN.
-                if(registersV[(char)(OperationCode & 0x0F000)] == registersV[(char)(OperationCode & 0x00FF)])
+                if(registersV[(char)(OperationCode & 0x0F00) >> 8] == (char)(OperationCode))
                     registerPC += 4;
                 else
                     registerPC += 2;
@@ -162,15 +175,92 @@ public class Memory {
                 break;
 
             case 0x6000: //If the first byte is 6 then sets VX to NN.
-                registersV[(char)(OperationCode & 0x0F00)] = (char)(OperationCode & 0x00FF);
-                System.out.println(registersV[(char)(OperationCode & 0x0F00)]);
+                registersV[(char)(OperationCode & 0x0F00) >> 8] = (char)(OperationCode & 0x00FF);
+                registerPC += 2;
                 break;
 
-            case 0x7000:
+            case 0x7000: // 7XNN - Adds NN to VX;
+                int addedValue = OperationCode & 0x00FF;
+                int address = OperationCode & 0x0F00;
+                registersV[address] = (char)((registersV[address] + addedValue) & 0x00FF);
+                registerPC += 2;
                 break;
+
             case 0x8000:
+                switch(OperationCode & 0x000F) {
+                    case 0x0000:
+                        registersV[(char)(OperationCode & 0x0F00) >>> 8] = registersV[(char)(OperationCode & 0x00F0) >>> 4];
+                        break;
+
+                    case 0x0001:
+                        break;
+
+                    case 0x0002:
+                        break;
+
+                    case 0x0003:
+                        break;
+
+                    case 0x0004:
+                        break;
+
+                    case 0x0005:
+                        break;
+
+                    case 0x0006:
+                        break;
+
+                    case 0x0007:
+                        break;
+
+                    case 0x000E:
+                        break;
+                }
                 break;
+
             case 0x9000:
+                break;
+
+            case 0xA000:
+                registerI = (char)(OperationCode & 0x0FFF);
+                registerPC += 2;
+                break;
+
+            case 0xB000:
+                break;
+
+            case 0xC000:
+                break;
+
+            case 0xD000: //DXYN - Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
+                int startX = registersV[(OperationCode & 0x0F00) >> 8];
+                int startY = registersV[(OperationCode & 0x00F0) >> 4];
+                registersV[15] = 0;
+                int n = OperationCode & 0x000F;
+                for(int y = 0; y < n; y++) {
+                    int sprite = memory[registerI + y];
+                    for(int x = 0; x < 8; x++) {
+                        int pixel = sprite & (0x80 >> x);
+                        if(pixel != 0) {
+                            int finalX = x + startX;
+                            int finalY = y + startY;
+
+                            if(Graphics[finalX][finalY]) {
+                                registersV[15] = 1;
+                            }
+
+                            Graphics[finalX][finalY] ^= true;
+                        }
+                    }
+                }
+                drawFlag = true;
+                registerPC += 2;
+                break;
+
+            case 0xE000:
+                break;
+
+            case 0xF000:
                 break;
 
             default:
@@ -180,20 +270,28 @@ public class Memory {
     }
 
     public void run() {
+
         fetchOPCode();
         decodeOPCode();
     }
 
     public void loadProgram(String file) {
+        DataInputStream input;
         try {
-            DataInputStream input = new DataInputStream(new FileInputStream(new File(file)));
+            input = new DataInputStream(new FileInputStream(new File(file)));
 
             for(int memoryOffSet = 0; input.available() > 0; memoryOffSet++) {
-                memory[0x0200 + memoryOffSet] = (char)input.readByte();
+                memory[0x0200 + memoryOffSet] = (char)(input.readByte() & 0x00FF);
             }
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(2);
+        }
+    }
+
+    public void loadFontSet() {
+        for(int memoryOffSet = 0; memoryOffSet < keyboard.FONT.length; memoryOffSet++) {
+            memory[0x0050 + memoryOffSet] = (char)(keyboard.FONT[memoryOffSet]);
         }
     }
 }

@@ -22,9 +22,9 @@ public class DisplayPanel extends JPanel {
         for(int x = 0; x < WIDTH; x++) {
             for(int y = 0; y < HEIGHT; y++) {
                 if(display[x][y])
-                    g.setColor(Color.BLACK);
-                else
                     g.setColor(Color.WHITE);
+                else
+                    g.setColor(Color.BLACK);
                 g.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
             }
         }
