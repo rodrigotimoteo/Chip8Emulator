@@ -1,23 +1,4 @@
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-
 public class Keyboard {
-
-    KeyListener keyListener = new KeyListener() {
-        public void keyTyped(KeyEvent e) {
-
-        }
-
-        public void keyPressed(KeyEvent e) {
-
-        }
-
-        public void keyReleased(KeyEvent e) {
-
-        }
-    };
-
-    private final boolean[] keyStrokes = new boolean[16];
 
     public static final int[] FONT = {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -37,12 +18,5 @@ public class Keyboard {
             0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
             0xF0, 0x80, 0xF0, 0x80, 0x80  // F
     };
-
-    public Keyboard() {
-        for (int i = 0; i < 15; i++) {
-            keyStrokes[i] = false;
-        }
-    }
-
 
 }
