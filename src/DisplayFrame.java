@@ -7,7 +7,7 @@ public class DisplayFrame extends JFrame implements KeyListener {
 
     private DisplayPanel displayPanel;
 
-    private boolean[] keys;
+    private int key;
 
     private static int WIDTH;
     private static int HEIGHT;
@@ -17,7 +17,6 @@ public class DisplayFrame extends JFrame implements KeyListener {
         WIDTH = mem.getWidth();
         HEIGHT = mem.getHeight();
         SCALE = mem.getScale();
-        keys = new boolean[16];
 
         setPreferredSize(new Dimension(WIDTH * SCALE, HEIGHT * (SCALE + 1)));
         pack();
@@ -28,120 +27,72 @@ public class DisplayFrame extends JFrame implements KeyListener {
         setTitle("Chip8 Emulator by Rodrigo Timoteo");
         pack();
         setVisible(true);
+        addKeyListener(this);
     }
 
     public void keyTyped(KeyEvent e) {
     }
 
     public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-        switch(key) {
-            case KeyEvent.VK_NUMPAD1:
-                keys[0] = true;
+        //System.out.println(e.getKeyCode());
+        int keyCode = e.getKeyCode();
+        switch(keyCode) {
+            case KeyEvent.VK_1:
+                key = 1;
                 break;
-            case KeyEvent.VK_NUMPAD2:
-                keys[1] = true;
+            case KeyEvent.VK_2:
+                key = 2;
                 break;
-            case KeyEvent.VK_NUMPAD3:
-                keys[2] = true;
+            case KeyEvent.VK_3:
+                key = 3;
                 break;
-            case KeyEvent.VK_NUMPAD4:
-                keys[3] = true;
+            case KeyEvent.VK_4:
+                key = 4;
                 break;
             case KeyEvent.VK_Q:
-                keys[4] = true;
+                key = 5;
                 break;
             case KeyEvent.VK_W:
-                keys[5] = true;
+                key = 6;
                 break;
             case KeyEvent.VK_E:
-                keys[6] = true;
+                key = 7;
                 break;
             case KeyEvent.VK_R:
-                keys[7] = true;
+                key = 8;
                 break;
             case KeyEvent.VK_A:
-                keys[8] = true;
+                key = 9;
                 break;
             case KeyEvent.VK_S:
-                keys[9] = true;
+                key = 10;
                 break;
             case KeyEvent.VK_D:
-                keys[10] = true;
+                key = 11;
                 break;
             case KeyEvent.VK_F:
-                keys[11] = true;
+                key = 12;
                 break;
             case KeyEvent.VK_Z:
-                keys[12] = true;
+                key = 13;
                 break;
             case KeyEvent.VK_X:
-                keys[13] = true;
+                key = 14;
                 break;
             case KeyEvent.VK_C:
-                keys[14] = true;
+                key = 15;
                 break;
             case KeyEvent.VK_V:
-                keys[15] = true;
+                key = 16;
                 break;
         }
     }
 
     public void keyReleased(KeyEvent e) {
-        int key = e.getKeyCode();
-        switch(key) {
-            case KeyEvent.VK_NUMPAD1:
-                keys[0] = false;
-                break;
-            case KeyEvent.VK_NUMPAD2:
-                keys[1] = false;
-                break;
-            case KeyEvent.VK_NUMPAD3:
-                keys[2] = false;
-                break;
-            case KeyEvent.VK_NUMPAD4:
-                keys[3] = false;
-                break;
-            case KeyEvent.VK_Q:
-                keys[4] = false;
-                break;
-            case KeyEvent.VK_W:
-                keys[5] = false;
-                break;
-            case KeyEvent.VK_E:
-                keys[6] = false;
-                break;
-            case KeyEvent.VK_R:
-                keys[7] = false;
-                break;
-            case KeyEvent.VK_A:
-                keys[8] = false;
-                break;
-            case KeyEvent.VK_S:
-                keys[9] = false;
-                break;
-            case KeyEvent.VK_D:
-                keys[10] = false;
-                break;
-            case KeyEvent.VK_F:
-                keys[11] = false;
-                break;
-            case KeyEvent.VK_Z:
-                keys[12] = false;
-                break;
-            case KeyEvent.VK_X:
-                keys[13] = false;
-                break;
-            case KeyEvent.VK_C:
-                keys[14] = false;
-                break;
-            case KeyEvent.VK_V:
-                keys[15] = false;
-                break;
-        }
+        key = 0;
     }
 
-    public boolean[] returnKeys() {
-        return keys;
+    public int returnKey() {
+        return key;
     }
 }

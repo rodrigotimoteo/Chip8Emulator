@@ -8,21 +8,21 @@ public class Chip8Emu extends Thread{
         keyboard = new Keyboard();
         memory = new Memory(keyboard);
         displayFrame = new DisplayFrame(memory);
-        memory.loadProgram("pong2.rom");
+        memory.loadProgram("tetris.rom");
         memory.loadFontSet();
     }
 
     public void run() { //Chip 8 runs at 60FPS
         int i = 0;
         while(true) {
-            memory.getKeys(displayFrame.returnKeys());
+            memory.getKeys(displayFrame.returnKey());
             memory.run();
             if(memory.isDrawFlag()) {
                 displayFrame.repaint();
                 memory.resetDrawFlag();
             }
             try {
-                Thread.sleep(1000 / 60);
+                Thread.sleep(4);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

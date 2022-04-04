@@ -2,9 +2,9 @@ import java.io.*;
 
 public class Memory {
 
-    private static final int WIDTH = 64;
-    private static final int HEIGHT = 32;
-    private static final int SCALE = 16;
+    private static final int WIDTH = 64;  //WIDTH of the Window
+    private static final int HEIGHT = 32; //HEIGHT of the Window
+    private static final int SCALE = 16;  //SCALE of the Window
 
     private char OperationCode; //Store the opcode currently using
 
@@ -22,11 +22,10 @@ public class Memory {
 
     private DisplayPanel displayPanel; //Get the gpu and display informations
 
-    public boolean[][] Graphics = new boolean[WIDTH][HEIGHT];
-    //private DisplayFrame displayFrame;
-    private boolean drawFlag;
+    public boolean[][] Graphics = new boolean[WIDTH][HEIGHT]; //Array used to store the display paint information
+    private boolean drawFlag; //Flag used to know when to redraw the screen
 
-    public boolean[] keys; //Stores the input information
+    public int key ; //Stores the input information
 
     private void clearMemory() {
         for(int i = 0; i < 4096; i++) {
@@ -79,19 +78,19 @@ public class Memory {
                 Graphics[x][y] = false;
             }
         }
-    }
+    } //Reset the Graphics array to all false
 
     public int getWidth() {
         return WIDTH;
-    }
+    } //Return the Width of the Window
 
     public int getHeight() {
         return HEIGHT;
-    }
+    } //Return the Height of the Window
 
     public int getScale() {
         return SCALE;
-    }
+    } //Return the Scale of the Window
 
     public void dumpMemory() {
         int counter = 0;
@@ -104,7 +103,7 @@ public class Memory {
             }
             System.out.print(hexFromChar + " ");
         }
-    }
+    } //DEBUG TOOLS
 
     public void dumpGraphics() {
         System.out.format("\n\n");
@@ -115,18 +114,13 @@ public class Memory {
             System.out.format("\n");
         }
         System.out.format("\n\n");
-    }
+    } //DEBUG TOOLS
 
     public void dumpKeys() {
-        for(int i = 0; i < 16; i++) {
-            System.out.print(keys[i]);
-        }
-        System.out.format("\n");
-    }
+        System.out.println(key);
+    } //DEBUG TOOLS
 
     public Memory(Keyboard keyboard) {
-        keys = new boolean[16];
-
         clearMemory();
         clearRegistersVAndStack();
         clearRegisterI();
@@ -135,7 +129,7 @@ public class Memory {
         resetDelayTimer();
         resetSoundTimer();
         resetDrawFlag();
-    }
+    } //Crea
 
     private void fetchOPCode() { //The OPCode is divided into 2 bytes from memory, so it fetches those two bytes and combines them into a 16bit instruction variable Operation Code
         OperationCode = (char)((memory[registerPC] << 8)  | memory[registerPC + 1]);
@@ -177,7 +171,7 @@ public class Memory {
                 break;
 
             case 0x4000:
-                if(registersV[(char)(OperationCode & 0x0F00) >> 8] != registersV[(char)(OperationCode & 0x00FF)])
+                if(registersV[(char)(OperationCode & 0x0F00) >> 8] != (char)(OperationCode & 0x00FF))
                     registerPC += 4;
                 else
                     registerPC += 2;
@@ -230,18 +224,50 @@ public class Memory {
                         break;
 
                     case 0x0004:
+                        if(registersV[(char)(OperationCode & 0x00F0) >> 4] > 0xFF - registersV[(OperationCode & 0x0F00) >> 8]) {
+                            registersV[0xF] = 1;
+                        } else {
+                            registersV[0xF] = 0;
+                        }
+                        registersV[(OperationCode & 0x0F00) >> 8] = (char)((registersV[(OperationCode & 0x0F00) >> 8] + registersV[(OperationCode & 0x00F0) >> 4]) & 0xFF);
+                        registerPC += 2;
                         break;
 
                     case 0x0005:
+                        if(registersV[(OperationCode & 0x0F00) >> 8] > registersV[(OperationCode & 0x00F0) >> 4]) {
+                            registersV[0xF] = 1;
+                        } else {
+                            registersV[0xF] = 0;
+                        }
+                        registersV[(OperationCode & 0x0F00) >> 8] = (char)((registersV[(OperationCode & 0x0F00) >> 8] - registersV[(OperationCode & 0x00F0) >> 4]) & 0xFF);
+                        registerPC += 2;
                         break;
 
                     case 0x0006:
+                        char lastByte = (char)(registersV[(OperationCode & 0x0F00) >> 8]);
+                        if((lastByte & 0x1) == 1)
+                            registersV[0x000F] = 1;
+                        else
+                            registersV[0x000F] = 0;
+
+                        registersV[lastByte] = (char)(registersV[lastByte] >> 1);
+
+                        registerPC += 2;
                         break;
 
                     case 0x0007:
+
                         break;
 
                     case 0x000E:
+                        char firstByte = (char)(registersV[OperationCode & 0x0F00] >> 8);
+                        if((char)(firstByte >> 7) == 0x0001)
+                            registersV[0x000F] = 1;
+                        else
+                            registersV[0x000F] = 0;
+
+                        registersV[firstByte] = (char) ((registersV[firstByte] << 1) & 0xFF);
+                        registerPC += 2;
                         break;
                 }
                 break;
@@ -264,11 +290,13 @@ public class Memory {
                 break;
 
             case 0xB000:
+                registerPC = (char) (registersV[0] + (char)(OperationCode & 0x0FFF));
                 break;
 
             case 0xC000:
                 char random = (char)(Math.floor(Math.random() * 256));
                 registersV[(char)(OperationCode & 0x0F00) >> 8] = (char)(random & (char)(OperationCode & 0x00FF));
+                registerPC += 2;
                 break;
 
             case 0xD000: //DXYN - Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
@@ -299,6 +327,25 @@ public class Memory {
                 break;
 
             case 0xE000:
+                switch(OperationCode & 0x00FF) {
+                    case 0x009E:
+                        if(registersV[(char)(OperationCode & 0x0F00) >> 8] == key)
+                            registerPC += 4;
+                        else
+                            registerPC += 2;
+                        break;
+
+                    case 0x00A1:
+                        if(registersV[(char)(OperationCode & 0x0F00) >> 8] != key)
+                            registerPC += 4;
+                        else
+                            registerPC += 2;
+                        break;
+                    default:
+                        System.err.println("Unsupported Operation Code!");
+                        System.exit(1);
+                        break;
+                }
                 break;
 
             case 0xF000:
@@ -309,7 +356,8 @@ public class Memory {
                         break;
 
                     case 0x000A:
-
+                        registersV[(char)(OperationCode & 0x0F00) >> 8] = (char)key;
+                        registerPC += 2;
                         break;
 
                     case 0x0015:
@@ -363,12 +411,19 @@ public class Memory {
                 System.err.println("Unsupported Operation Code!");
                 System.exit(1);
         }
+
+        if(soundTimer > 0) {
+            soundTimer--;
+        }
+
+        if(delayTimer > 0) {
+            delayTimer--;
+        }
     }
 
     public void run() {
         fetchOPCode();
         decodeOPCode();
-        dumpKeys();
     }
 
     public void loadProgram(String file) {
@@ -391,9 +446,7 @@ public class Memory {
         }
     }
 
-    public void getKeys(boolean[] keys) {
-        for(int i = 0; i < 16; i++) {
-            this.keys[i] = keys[i];
-        }
+    public void getKeys(int key) {
+        this.key = key;
     }
 }
