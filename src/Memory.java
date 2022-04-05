@@ -19,6 +19,7 @@ public class Memory {
 
     private int delayTimer; //Timer for the delay (ticks at 60Hz)
     private int soundTimer; //Timer for the sound ticks everytime except at = 0
+    private final String soundFile = "./beep.wav";
 
     private DisplayPanel displayPanel; //Get the gpu and display informations
 
@@ -255,8 +256,14 @@ public class Memory {
                         registerPC += 2;
                         break;
 
-                    case 0x0007:
+                    case 0x0007: //8XY7 Vx = Vy - Vx
+                        if(registersV[(char)(OperationCode & 0x0F00) >> 8] > registersV[(char)(OperationCode & 0x00F0)])
+                            registersV[0xF] = 0;
+                        else
+                            registersV[0xF] = 1;
+                        registersV[(char)(OperationCode & 0x0F00) >> 8] = (char)(registersV[(char)(OperationCode & 0x0F00) >> 8] - registersV[(char)(OperationCode & 0x00F0)] & 0x00FF);
 
+                        registerPC += 2;
                         break;
 
                     case 0x000E:
@@ -414,6 +421,7 @@ public class Memory {
 
         if(soundTimer > 0) {
             soundTimer--;
+            Sound.play(soundFile);
         }
 
         if(delayTimer > 0) {
@@ -426,10 +434,10 @@ public class Memory {
         decodeOPCode();
     }
 
-    public void loadProgram(String file) {
+    public void loadProgram(File file) {
         DataInputStream input;
         try {
-            input = new DataInputStream(new FileInputStream(new File(file)));
+            input = new DataInputStream(new FileInputStream(file));
 
             for(int memoryOffSet = 0; input.available() > 0; memoryOffSet++) {
                 memory[0x0200 + memoryOffSet] = (char)(input.readByte() & 0x00FF);

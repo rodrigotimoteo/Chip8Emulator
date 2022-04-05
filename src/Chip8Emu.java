@@ -1,19 +1,21 @@
+import javax.swing.*;
+import java.io.File;
+
 public class Chip8Emu extends Thread{
 
-    private DisplayFrame displayFrame;
-    private Memory memory;
-    private Keyboard keyboard;
+    private final DisplayFrame displayFrame;
+    private final Memory memory;
+    private final Keyboard keyboard;
 
     public Chip8Emu() {
         keyboard = new Keyboard();
         memory = new Memory(keyboard);
         displayFrame = new DisplayFrame(memory);
-        memory.loadProgram("tetris.rom");
+        memory.loadProgram(displayFrame.chooseFile());
         memory.loadFontSet();
     }
 
     public void run() { //Chip 8 runs at 60FPS
-        int i = 0;
         while(true) {
             memory.getKeys(displayFrame.returnKey());
             memory.run();
@@ -22,7 +24,7 @@ public class Chip8Emu extends Thread{
                 memory.resetDrawFlag();
             }
             try {
-                Thread.sleep(4);
+                Thread.sleep(3);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

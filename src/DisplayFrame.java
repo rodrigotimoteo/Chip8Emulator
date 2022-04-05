@@ -2,10 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
 
 public class DisplayFrame extends JFrame implements KeyListener {
 
     private DisplayPanel displayPanel;
+    FileDialog fileChooser;
 
     private int key;
 
@@ -24,9 +26,11 @@ public class DisplayFrame extends JFrame implements KeyListener {
         setLayout(new BorderLayout());
         add(displayPanel, BorderLayout.CENTER);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setTitle("Chip8 Emulator by Rodrigo Timoteo");
+        setLocationRelativeTo(null);
+        setTitle("Chip8 Emulator");
         pack();
         setVisible(true);
+
         addKeyListener(this);
     }
 
@@ -36,7 +40,7 @@ public class DisplayFrame extends JFrame implements KeyListener {
     public void keyPressed(KeyEvent e) {
         //System.out.println(e.getKeyCode());
         int keyCode = e.getKeyCode();
-        switch(keyCode) {
+        switch (keyCode) {
             case KeyEvent.VK_1:
                 key = 1;
                 break;
@@ -94,5 +98,11 @@ public class DisplayFrame extends JFrame implements KeyListener {
 
     public int returnKey() {
         return key;
+    }
+
+    public File chooseFile() {
+        fileChooser = new FileDialog(this, "Choose a ROM");
+        fileChooser.setVisible(true);
+        return new File(fileChooser.getDirectory() + fileChooser.getFile());
     }
 }
